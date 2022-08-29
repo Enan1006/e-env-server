@@ -19,6 +19,7 @@ async function run() {
     try {
         await client.connect();
         const carsCollection = client.db("eEnv").collection("carsCollection");
+        const blogsCollection = client.db("eEnv").collection("blogs");
 
         app.get('/featurecars', async (req, res) => {
             const query = {};
@@ -91,7 +92,14 @@ async function run() {
             const result = await carsCollection.updateOne(filter, updateDoc, options);
             console.log(result);
             res.send(result);
-        })
+        });
+
+        app.get('/blogs', async (req, res) => {
+            const query = {};
+            const cursor = blogsCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result)
+        });
     }
     finally {
 
