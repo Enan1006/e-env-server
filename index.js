@@ -100,6 +100,54 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result)
         });
+
+        app.get('/blog/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const cursor = await blogsCollection.findOne(query);
+            res.send(cursor)
+        });
+
+        app.post('/blogs', async (req, res) => {
+            const query = req.body;
+            const data = {
+                title: query.title,
+                image: query.image,
+                description: query.description
+            };
+            console.log(data);
+            const result = await blogsCollection.insertOne(data);
+            res.send(result)
+        });
+
+        app.put('/blog/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const content = req.body.content;
+            const options = { upsert: true };
+            const updateDoc = {
+                title: content.title,
+                image: content.image,
+                description: content.description
+            };
+            const result = await blogsCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
+        });
+
+        app.delete('/blog/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await blogsCollection.deleteOne(filter);
+            res.send(result)
+        });
+
+        app.get('/home-blogs', async (req, res) => {
+            const query = {};
+            const cursor = blogsCollection.find(query).limit(6);
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+
     }
     finally {
 
