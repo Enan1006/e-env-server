@@ -9,6 +9,22 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'unauthorized access' })
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ message: 'Access forbidden' })
+        }
+        console.log('decoded', decoded);
+        const decoded = req.decoded;
+        next();
+    })
+}
+
 app.get('/', (req, res) => {
     res.send("E-ENV server is running")
 })
@@ -58,12 +74,18 @@ async function run() {
             res.send(result)
         });
 
-        app.get('/inventory', async (req, res) => {
+        app.get('/inventory', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
             const email = req.query.email;
-            const query = { user: email };
-            const cursor = carsCollection.find(query);
-            const result = await cursor.toArray();
-            res.send(result)
+            if (email === decodedEmail) {
+                const query = { user: email };
+                const cursor = carsCollection.find(query);
+                const result = await cursor.toArray();
+                res.send(result)
+            }
+            else {
+                return res.status(403).send({ message: 'Access Forbidden' })
+            }
         });
 
         app.delete('/inventory/:id', async (req, res) => {
